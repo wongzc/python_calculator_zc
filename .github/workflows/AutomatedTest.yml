@@ -22,10 +22,11 @@ jobs:
       - name: install pytest
         run: pip install pytest
 
-      - name: Run tests
+      - id: run-tests
         uses: dima-engineer/pytest-reporter@v2.1.0
         with:
           cov-omit-list: tests/*
           cov-threshold-single: 85
           cov-threshold-total: 90
           async-tests: true
+          poetry-version: 1.4.2
