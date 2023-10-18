@@ -15,12 +15,18 @@ jobs:
       - name: checkout my codes
         uses: actions/checkout@v2
 
-      - name: setup python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.11.5
-      - name: install pytest
-        run: pip install pytest
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pytest pytest-cov
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: run-tests
-        run: python -m pytest test_calculator_zc.py
+      - name: Build coverage file
+        run: |
+          pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=app tests/ | tee pytest-coverage.txt
+
+      - name: Pytest coverage comment
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          pytest-coverage-path: ./pytest-coverage.txt
+          junitxml-path: ./pytest.xml
