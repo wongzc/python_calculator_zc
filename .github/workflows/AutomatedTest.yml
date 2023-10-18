@@ -20,6 +20,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install flake8 pytest pytest-cov
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Run pytest
+        run: python -m pytest test_calculator_zc.py
 
       - name: Build coverage file
         run: |
