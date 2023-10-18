@@ -1,4 +1,4 @@
-name: CI for Hello World
+name: run test
 
 on:
   push:
@@ -20,22 +20,11 @@ jobs:
       - name: Checkout Own Repo
         uses: actions/checkout@v2
         with:
-          repository: explicitworkload/helloworld-python
-
-      - name: Get TestScript from Remote Repository
-        env:
-          TOKEN: ${{ secrets.GITHUB_TOKEN }} #secrets.repo_token
-        run: |
-          curl -H "Authorization: token ${TOKEN}" https://github.com/wongzc/python_calculator_zc/blob/main/test_calculator_zc.py -o testetst.py
-
-      - name: List Content from Repo
-        run: |
-          pwd
-          ls
+          repository: wongzc/python_calculator_zc
 
       - name: Start pytest Testing
         run: |
-          pytest testetst.py -v -cov --junitxml=report.xml
+          pytest test_calculator_zc.py -v -cov --junitxml=report.xml
 
       - if: ${{ failure() }}
         name: Create Issue on Failed workflow
@@ -50,7 +39,7 @@ jobs:
             Workflow name - `${{ github.workflow }}`
             Job -           `${{ github.job }}`
             status -        `${{ job.status }}`
-            assignees: explicitworkload
+            assignees: wongzc
 
       # - uses: JasonEtco/create-an-issue@v2
       #   env:
