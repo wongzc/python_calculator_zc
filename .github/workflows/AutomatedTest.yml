@@ -15,7 +15,7 @@ jobs:
 
       - name: Install Libraries
         run: |
-          pip install flake8 pytest pytest-cov robotframework
+          pip install flake8 pytest pytest-cov robotframework pytest-md pytest-emoji
 
       - name: Checkout Own Repo
         uses: actions/checkout@v2
@@ -26,29 +26,23 @@ jobs:
         run: |
           pytest test_calculator_zc.py -v -cov --junitxml=report.xml
 
-      - if: ${{ failure() }}
-        name: Create Issue on Failed workflow
-        uses: dacbd/create-issue-action@main
+      - name: Compile pytest results
+        uses: pavelzw/pytest-action@v2
         with:
-          token: ${{ github.token }}
-          title: Action Workflow Failed.
-          body: |
-            ### Context
-            [Failed Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-            [Codebase](https://github.com/${{ github.repository }}/tree/${{ github.sha }})
-            Workflow name - `${{ github.workflow }}`
-            Job -           `${{ github.job }}`
-            status -        `${{ job.status }}`
-            assignees: wongzc
-
+          verbose: true
+          emoji: true
+          job-summary: true
+          custom-arguments: "-q"
+          click-to-expand: true
+          report-title: "Test Report"
       # - uses: JasonEtco/create-an-issue@v2
       #   env:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       #   with:
       #     filename: .github/ISSUE_TEMPLATE.md
 
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action/composite@v2
-        if: always()
-        with:
-          junit_files: "report.xml"
+      # - name: Publish Test Results
+      #   uses: EnricoMi/publish-unit-test-result-action/composite@v2
+      #   if: always()
+      #   with:
+      #     junit_files: "report.xml"
