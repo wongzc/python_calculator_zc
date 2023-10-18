@@ -3,6 +3,8 @@ name: run test
 on:
   push:
     branches: [main]
+    tags:
+      - 'v*'
 
 jobs:
   build:
