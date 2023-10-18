@@ -1,34 +1,65 @@
-name: Automated Test
+name: CI for Hello World
+
 on:
-  pull_request:
-    branches: [main]
   push:
     branches: [main]
 
 jobs:
   build:
-    name: Build my virtual OS
-
     runs-on: ubuntu-latest
 
     steps:
-      - name: checkout my codes
-        uses: actions/checkout@v2
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install flake8 pytest pytest-cov
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-      - name: Run pytest
-        run: python -m pytest test_calculator_zc.py
-
-      - name: Build coverage file
-        run: |
-          pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=app tests/ | tee pytest-coverage.txt
-
-      - name: Pytest coverage comment
-        uses: MishaKav/pytest-coverage-comment@main
+      - uses: actions/setup-python@v2
         with:
-          pytest-coverage-path: ./pytest-coverage.txt
-          junitxml-path: ./pytest.xml
+          python-version: 3.11
+
+      - name: Install Libraries
+        run: |
+          pip install flake8 pytest pytest-cov robotframework
+
+      - name: Checkout Own Repo
+        uses: actions/checkout@v2
+        with:
+          repository: explicitworkload/helloworld-python
+
+      - name: Get TestScript from Remote Repository
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }} #secrets.repo_token
+        run: |
+          curl -H "Authorization: token ${TOKEN}" https://github.com/wongzc/python_calculator_zc/blob/main/test_calculator_zc.py -o testetst.py
+
+      - name: List Content from Repo
+        run: |
+          pwd
+          ls
+
+      - name: Start pytest Testing
+        run: |
+          pytest testetst.py -v -cov --junitxml=report.xml
+
+      - if: ${{ failure() }}
+        name: Create Issue on Failed workflow
+        uses: dacbd/create-issue-action@main
+        with:
+          token: ${{ github.token }}
+          title: Action Workflow Failed.
+          body: |
+            ### Context
+            [Failed Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            [Codebase](https://github.com/${{ github.repository }}/tree/${{ github.sha }})
+            Workflow name - `${{ github.workflow }}`
+            Job -           `${{ github.job }}`
+            status -        `${{ job.status }}`
+            assignees: explicitworkload
+
+      # - uses: JasonEtco/create-an-issue@v2
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     filename: .github/ISSUE_TEMPLATE.md
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action/composite@v2
+        if: always()
+        with:
+          junit_files: "report.xml"
